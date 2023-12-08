@@ -16,12 +16,20 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption('Juego')
 
-#img loader
+#img loaders
+
+#def fonts
+fuente = pygame.font.SysFont('Book Antiqua', 20)
+
+#def colors
+rojo = (234, 24, 38)
+verde = (38, 234, 24)
+
 #background
 	#TO DO: Add Parallax animation?
 background = pygame.image.load('assets/background.png').convert_alpha()
 
-UI_panel = pygame.image.load('assets/ui_panel.png').convert_alpha()
+UI_panel_img = pygame.image.load('assets/ui_panel.png').convert_alpha()
 
 #draw functions
 
@@ -29,7 +37,20 @@ def draw_background():
 	screen.blit(background, (0,0))
 
 def draw_ui_panel():
-	screen.blit((UI_panel), (0, (SCREEN_HEIGHT - UI_PANEL_HEIGHT)))
+	# Base del panel
+	screen.blit((UI_panel_img), (0, (SCREEN_HEIGHT - UI_PANEL_HEIGHT)))
+
+	#mostrar stats Player
+	draw_text(f'{player.nombre} | Salud: {player.salud}', fuente, rojo, 100, (SCREEN_HEIGHT - UI_PANEL_HEIGHT + 10))
+
+	#mostrar stats enemigos
+	for count, i in enumerate(lista_enemigos):
+		#mostrar nombres
+		draw_text(f'{i.nombre} | Salud: {i.salud}', fuente, rojo, 550, (SCREEN_HEIGHT - UI_PANEL_HEIGHT + 10 + count * 60))
+
+def draw_text(texto, fuente, color_txt, x_pos_txt, y_pos_txt):
+	img = fuente.render(texto, True, color_txt)
+	screen.blit(img, (x_pos_txt, y_pos_txt))
 
 #Classes
 
@@ -99,6 +120,20 @@ class Personaje():
 	def draw(self):
 		screen.blit(self.image, self.rect)
 
+class BarraSalud():
+	def __init__(self, x, y, ps, ps_max):
+		self.x = x
+		self.y = y
+		self.ps = ps
+		self.ps_max = ps_max
+
+	def draw(self, ps):
+		# actualizar salud
+		self.ps = ps
+		pygame.draw.rect(screen, rojo, (self.x, self.y, 150, 20))
+		pygame.draw.rect(screen, verde, (self.x, self.y, (150 * (self.ps / self.ps_max)), 20))
+
+
 player = Personaje(180, 240, 'Player', 30, 10, 3)
 bandido_1 = Personaje(490, 310, 'Bandido', 20, 5, 1)
 bandido_2 = Personaje(640, 310, 'Bandido', 20, 5, 1)
@@ -107,6 +142,13 @@ bandido_2 = Personaje(640, 310, 'Bandido', 20, 5, 1)
 lista_enemigos = []
 lista_enemigos.append(bandido_1)
 lista_enemigos.append(bandido_2)
+
+# Creamos barra de salud del PJ
+player_barra_salud = BarraSalud(100, SCREEN_HEIGHT - UI_PANEL_HEIGHT + 40, player.salud, player.salud_max)
+
+# Creamos barras de salud para los enemigos
+bandido_1_barra_salud = BarraSalud(550, SCREEN_HEIGHT - UI_PANEL_HEIGHT + 40, bandido_1.salud, bandido_1.salud_max)
+bandido_2_barra_salud = BarraSalud(550, SCREEN_HEIGHT - UI_PANEL_HEIGHT + 100, bandido_2.salud, bandido_2.salud_max)
 
 #Game Loop
 
@@ -118,6 +160,9 @@ while game_running:
 	draw_background()
 
 	draw_ui_panel()
+	player_barra_salud.draw(player.salud)
+	bandido_1_barra_salud.draw(bandido_1.salud)
+	bandido_2_barra_salud.draw(bandido_2.salud)
 
 	#draw entities
 	player.update()
@@ -127,11 +172,10 @@ while game_running:
 		Personaje.update()
 		Personaje.draw()
 
-	
 	#Event Handling
 	for event in pygame.event.get():
 
-		
+
 
 		if event.type == pygame.QUIT:
 			game_running = False
